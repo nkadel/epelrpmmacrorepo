@@ -1,0 +1,9 @@
+# epel macros
+
+%epel 10
+
+# Bash completions; not in bash to not intefere with install ordering
+%bash_completion_dir /usr/share/bash-completion/completions/
+
+# Arches that OpenJDK and dependent packages run on
+%java_arches aarch64 ppc64le s390x x86_64
