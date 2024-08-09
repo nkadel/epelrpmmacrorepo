@@ -18,22 +18,17 @@ AWSCLIPKGS+=go-srpm-macros-epel-srpm
 AWSCLIPKGS+=rpc-packaging-srpm
 AWSCLIPKGS+=rust-packaging-srpm
 
-REPOS+=epelrpmmacrorepo/el/8
-REPOS+=epelrpmmacrorepo/el/9
 REPOS+=epelrpmmacrorepo/el/10
 
 REPODIRS := $(patsubst %,%/x86_64/repodata,$(REPOS)) $(patsubst %,%/SRPMS/repodata,$(REPOS))
 
 # No local dependencies at build time
-CFGS+=epelrpmmacrorepo-8-x86_64.cfg
-CFGS+=epelrpmmacrorepo-9-x86_64.cfg
 CFGS+=epelrpmmacrorepo-10-x86_64.cfg
 
 # Link from /etc/mock
-MOCKCFGS+=alma+epel-8-x86_64.cfg
-MOCKCFGS+=alma+epel-9-x86_64.cfg
 MOCKCFGS+=alma+epel-10-x86_64.cfg
 
+all:: tpl
 all:: install
 install:: $(CFGS) $(MOCKCFGS)
 install:: $(REPODIRS)
@@ -74,38 +69,6 @@ $(MOCKCFGS)::
 	@echo Generating $@ from /etc/mock/$@
 	@echo "include('/etc/mock/$@')" | tee $@
 
-epelrpmmacrorepo-8-x86_64.cfg: /etc/mock/alma+epel-8-x86_64.cfg
-	@echo Generating $@ from $?
-	@echo "include('$?')" > $@
-	@echo "config_opts['root'] = 'epelrpmmacrorepo-{{ releasever }}-{{ target_arch }}'" | tee -a $@
-	@echo "config_opts['dnf.conf'] += \"\"\"" | tee -a $@
-	@echo '[epelrpmmacrorepo]' | tee -a $@
-	@echo 'name=epelrpmmacrorepo' | tee -a $@
-	@echo 'enabled=1' | tee -a $@
-	@echo 'baseurl=$(REPOBASE)/epelrpmmacrorepo/el/8/x86_64/' | tee -a $@
-	@echo 'failovermethod=priority' | tee -a $@
-	@echo 'skip_if_unavailable=False' | tee -a $@
-	@echo 'metadata_expire=1' | tee -a $@
-	@echo 'gpgcheck=0' | tee -a $@
-	@echo '#cost=2000' | tee -a $@
-	@echo '"""' | tee -a $@
-
-epelrpmmacrorepo-9-x86_64.cfg: /etc/mock/alma+epel-9-x86_64.cfg
-	@echo Generating $@ from $?
-	@echo "include('$?')" > $@
-	@echo "config_opts['root'] = 'epelrpmmacrorepo-{{ releasever }}-{{ target_arch }}'" | tee -a $@
-	@echo "config_opts['dnf.conf'] += \"\"\"" | tee -a $@
-	@echo '[epelrpmmacrorepo]' | tee -a $@
-	@echo 'name=epelrpmmacrorepo' | tee -a $@
-	@echo 'enabled=1' | tee -a $@
-	@echo 'baseurl=$(REPOBASE)/epelrpmmacrorepo/el/9/x86_64/' | tee -a $@
-	@echo 'failovermethod=priority' | tee -a $@
-	@echo 'skip_if_unavailable=False' | tee -a $@
-	@echo 'metadata_expire=1' | tee -a $@
-	@echo 'gpgcheck=0' | tee -a $@
-	@echo '#cost=2000' | tee -a $@
-	@echo '"""' | tee -a $@
-
 epelrpmmacrorepo-10-x86_64.cfg: /etc/mock/alma+epel-10-x86_64.cfg
 	@echo Generating $@ from $?
 	@echo "include('$?')" | tee $@
@@ -138,6 +101,7 @@ epelrpmmacrorepo.repo:: Makefile epelrpmmacrorepo.repo.in
 		exit 1; \
 	fi
 
+tpl:: epel-10.tpl
 .PHONY: epel-10.tpl
 epel-10.tpl::
 	@echo "config_opts['chroot_setup_cmd'] += \" epel-rpm-macros\"" | tee $@
@@ -153,9 +117,8 @@ epel-10.tpl::
 	@echo '#cost=2000' | tee -a $@
 	@echo '"""' | tee -a $@
 
-.PHONY: /etc/mock/templates/epel-10.tpl
-/etc/mock/templates/epel-10.tpl: epel-10.tpl
-	cmp -s $@ $?
+epel-10.tpl::
+	cmp -s /etc/mock/templates/$@ $@
 
 clean::
 	find . -name \*~ -exec rm -f {} \;
